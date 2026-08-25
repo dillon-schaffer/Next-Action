@@ -18,7 +18,7 @@ export default function Error({
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
-      <main className="mx-auto max-w-xl space-y-4 rounded-[var(--radius-lg)] border bg-card/60 p-8 shadow-sm">
+      <main className="mx-auto max-w-xl space-y-4 rounded-[var(--radius-lg)] border bg-card p-8">
         <h1 className="text-h1">Something went wrong</h1>
         <p className="text-body text-muted-foreground">
           {isConfigError

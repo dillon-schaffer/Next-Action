@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { authOptions } from "@/auth.config";
-import { listGoalsForUser } from "@/lib/goals";
 import {
   Card,
   CardContent,
@@ -12,21 +11,37 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { PageSurface } from "@/components/page-surface";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { Goal } from "@/lib/data/types";
 import { GoalForm } from "./goal-form";
 import { GoalItem } from "./goal-item";
 
-export default async function GoalsPage() {
-  const session = await getServerSession(authOptions);
+export default function GoalsPage() {
+  const { adapter, isReady } = useDataAdapter();
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/dashboard/goals");
-  }
+  const refresh = useCallback(async () => {
+    setGoals(await adapter.listGoals());
+    setLoaded(true);
+  }, [adapter]);
 
-  const userId = (session as any)?.user?.id as string;
-  const goals = await listGoalsForUser(userId);
+  useEffect(() => {
+    if (!isReady) return;
+    let cancelled = false;
+    (async () => {
+      if (cancelled) return;
+      await refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, refresh]);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+    <PageSurface maxWidth="max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h1">Goals</h1>
@@ -47,26 +62,28 @@ export default async function GoalsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GoalForm />
+          <GoalForm onCreated={refresh} />
         </CardContent>
       </Card>
 
       <div className="space-y-4">
         <h2 className="text-h2">
-          Your goals ({goals.length})
+          Your goals ({loaded ? goals.length : "…"})
         </h2>
-        {goals.length === 0 ? (
-          <p className="text-body text-muted-foreground">
-            No goals yet. Create one above to get started.
-          </p>
+        {!loaded ? (
+          <p className="text-body text-muted-foreground">Loading…</p>
+        ) : goals.length === 0 ? (
+          <EmptyState>
+            No goals yet. They&rsquo;re optional — a place to group related tasks once a few show up.
+          </EmptyState>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {goals.map((goal) => (
-              <GoalItem key={goal.id} goal={goal} />
+              <GoalItem key={goal.id} goal={goal} onDeleted={refresh} />
             ))}
           </div>
         )}
       </div>
-    </div>
+    </PageSurface>
   );
 }

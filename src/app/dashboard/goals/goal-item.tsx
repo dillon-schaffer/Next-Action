@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -10,17 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { Goal } from "@/lib/data/types";
 
-type GoalItemProps = {
-  goal: {
-    id: string;
-    title: string;
-    description: string | null;
-  };
-};
-
-export function GoalItem({ goal }: GoalItemProps) {
-  const router = useRouter();
+export function GoalItem({ goal, onDeleted }: { goal: Goal; onDeleted: () => void }) {
+  const { adapter } = useDataAdapter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
@@ -33,19 +26,17 @@ export function GoalItem({ goal }: GoalItemProps) {
     }
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/goals/${goal.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        alert("Failed to remove goal");
-        return;
-      }
-      router.refresh();
+      await adapter.archiveGoal(goal.id);
+      onDeleted();
+    } catch {
+      alert("Failed to remove goal");
     } finally {
       setIsDeleting(false);
     }
   }
 
   return (
-    <Card>
+    <Card className="transition-[transform,border-color] duration-200 [transition-timing-function:var(--ease-out)] hover:-translate-y-px hover:border-foreground/25">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">

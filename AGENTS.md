@@ -47,9 +47,9 @@ Load only as needed:
 - `agent_docs/resources.md`: Helpful references
 
 ## Current State (Update This!)
-**Last Updated:** 2026-02-10  
-**Working On:** —  
-**Recently Completed:** Recommendations are AI-generated only (no existing-task pick). GeneratedSuggestion table, 5/day quota, confirm/skip flow, fallback message.  
+**Last Updated:** 2026-08-24
+**Working On:** —
+**Recently Completed:** Visual redesign — restrained grayscale base (no shadows, no vertical-centered "floating card" layouts) plus a 5-color brand accent palette (Blue Slate / Muted Teal / Soft Sage / Dry Sage / Almond Cream) used as fills only, never text color (see `docs/Design-System.md` for the WCAG contrast rules behind that). Custom `/auth/sign-in` page replaces next-auth's default UI. Before that: guest-first — the app requires no sign-in. Guest data (interests, tasks, suggestions, accept/skip history) lives in localStorage behind a `DataAdapter` abstraction (`src/lib/data/`); signed-in users are unchanged. Recommendations, quota, and account migration (idempotent, via `localId` columns) all work for guests. See `docs/Guest-First-Architecture.md`. Also: Recommendations are AI-generated only (no existing-task pick). GeneratedSuggestion table, 5/day quota, confirm/skip flow, fallback message.
 **Blocked By:** None
 
 ## Roadmap

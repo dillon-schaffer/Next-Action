@@ -11,7 +11,7 @@ const OUTPUT_SCHEMA = z.object({
 export type LLMRecommendation = z.infer<typeof OUTPUT_SCHEMA>;
 
 const MAX_OUTPUT_TOKENS = 300;
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-5";
 
 function buildPrompt(
   shortlist: Array<{

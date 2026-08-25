@@ -145,6 +145,13 @@ model Goal {
   title       String
   description String?
   isActive    Boolean  @default(true)
+  // Set when this row was created by migrating a guest's local-storage goal into
+  // the account. Lets /api/guest/migrate upsert idempotently (retrying the same
+  // migration never creates duplicates). Scoped per-user (not globally unique):
+  // localId is client-supplied and unvalidated, so a global unique constraint
+  // would let one user's migration collide with another user's row by guessing
+  // or choosing the same localId (IDOR).
+  localId     String?
 
   tasks       Task[]
 
@@ -152,6 +159,7 @@ model Goal {
   updatedAt   DateTime @updatedAt
 
   @@index([userId, isActive])
+  @@unique([userId, localId])
 }
 
 model Task {
@@ -169,6 +177,10 @@ model Task {
   estimatedInput   String?  // raw input e.g. "2h" for display hint
   deadlineAt       DateTime?
   lastTouchedAt    DateTime?
+  // Set when this row was created by migrating a guest's local-storage task into
+  // the account. Lets /api/guest/migrate upsert idempotently. Scoped per-user —
+  // see the comment on Goal.localId for why this isn't a global unique.
+  localId          String?
 
   recommendationEvents RecommendationEvent[]
 
@@ -178,6 +190,7 @@ model Task {
   @@index([userId, status])
   @@index([userId, deadlineAt])
   @@index([userId, lastTouchedAt])
+  @@unique([userId, localId])
 }
 
 model RecommendationEvent {
@@ -229,7 +242,12 @@ model GeneratedSuggestion {
   decision           GeneratedSuggestionDecision   @default(pending)
   createdTaskId      String?
   createdAt          DateTime                      @default(now())
+  // Set when this row was created by migrating a guest's local-storage suggestion
+  // history into the account. Lets /api/guest/migrate upsert idempotently. Scoped
+  // per-user — see the comment on Goal.localId for why this isn't a global unique.
+  localId            String?
 
   @@index([userId, createdAt])
+  @@unique([userId, localId])
 }
 

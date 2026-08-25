@@ -1,13 +1,5 @@
 import { prisma } from "@/lib/db";
-
-const DAILY_CAP = 5;
-
-/** Start of day in UTC. */
-function dayStart(d: Date): Date {
-  const out = new Date(d);
-  out.setUTCHours(0, 0, 0, 0);
-  return out;
-}
+import { GENERATED_SUGGESTION_DAILY_CAP as DAILY_CAP, utcDayStart as dayStart } from "@/lib/llm/quota-constants";
 
 /** Returns true if user has not reached the daily cap for generated suggestions (5/day). */
 export async function canUseGeneratedSuggestion(userId: string): Promise<boolean> {

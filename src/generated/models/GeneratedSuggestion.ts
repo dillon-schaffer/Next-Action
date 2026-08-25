@@ -53,6 +53,7 @@ export type GeneratedSuggestionMinAggregateOutputType = {
   decision: $Enums.GeneratedSuggestionDecision | null
   createdTaskId: string | null
   createdAt: Date | null
+  localId: string | null
 }
 
 export type GeneratedSuggestionMaxAggregateOutputType = {
@@ -72,6 +73,7 @@ export type GeneratedSuggestionMaxAggregateOutputType = {
   decision: $Enums.GeneratedSuggestionDecision | null
   createdTaskId: string | null
   createdAt: Date | null
+  localId: string | null
 }
 
 export type GeneratedSuggestionCountAggregateOutputType = {
@@ -93,6 +95,7 @@ export type GeneratedSuggestionCountAggregateOutputType = {
   decision: number
   createdTaskId: number
   createdAt: number
+  localId: number
   _all: number
 }
 
@@ -124,6 +127,7 @@ export type GeneratedSuggestionMinAggregateInputType = {
   decision?: true
   createdTaskId?: true
   createdAt?: true
+  localId?: true
 }
 
 export type GeneratedSuggestionMaxAggregateInputType = {
@@ -143,6 +147,7 @@ export type GeneratedSuggestionMaxAggregateInputType = {
   decision?: true
   createdTaskId?: true
   createdAt?: true
+  localId?: true
 }
 
 export type GeneratedSuggestionCountAggregateInputType = {
@@ -164,6 +169,7 @@ export type GeneratedSuggestionCountAggregateInputType = {
   decision?: true
   createdTaskId?: true
   createdAt?: true
+  localId?: true
   _all?: true
 }
 
@@ -272,6 +278,7 @@ export type GeneratedSuggestionGroupByOutputType = {
   decision: $Enums.GeneratedSuggestionDecision
   createdTaskId: string | null
   createdAt: Date
+  localId: string | null
   _count: GeneratedSuggestionCountAggregateOutputType | null
   _avg: GeneratedSuggestionAvgAggregateOutputType | null
   _sum: GeneratedSuggestionSumAggregateOutputType | null
@@ -316,6 +323,7 @@ export type GeneratedSuggestionWhereInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFilter<"GeneratedSuggestion"> | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
   createdAt?: Prisma.DateTimeFilter<"GeneratedSuggestion"> | Date | string
+  localId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -338,11 +346,13 @@ export type GeneratedSuggestionOrderByWithRelationInput = {
   decision?: Prisma.SortOrder
   createdTaskId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
 export type GeneratedSuggestionWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId_localId?: Prisma.GeneratedSuggestionUserIdLocalIdCompoundUniqueInput
   AND?: Prisma.GeneratedSuggestionWhereInput | Prisma.GeneratedSuggestionWhereInput[]
   OR?: Prisma.GeneratedSuggestionWhereInput[]
   NOT?: Prisma.GeneratedSuggestionWhereInput | Prisma.GeneratedSuggestionWhereInput[]
@@ -363,8 +373,9 @@ export type GeneratedSuggestionWhereUniqueInput = Prisma.AtLeast<{
   decision?: Prisma.EnumGeneratedSuggestionDecisionFilter<"GeneratedSuggestion"> | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
   createdAt?: Prisma.DateTimeFilter<"GeneratedSuggestion"> | Date | string
+  localId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-}, "id">
+}, "id" | "userId_localId">
 
 export type GeneratedSuggestionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -385,6 +396,7 @@ export type GeneratedSuggestionOrderByWithAggregationInput = {
   decision?: Prisma.SortOrder
   createdTaskId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.GeneratedSuggestionCountOrderByAggregateInput
   _avg?: Prisma.GeneratedSuggestionAvgOrderByAggregateInput
   _max?: Prisma.GeneratedSuggestionMaxOrderByAggregateInput
@@ -414,6 +426,7 @@ export type GeneratedSuggestionScalarWhereWithAggregatesInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionWithAggregatesFilter<"GeneratedSuggestion"> | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.StringNullableWithAggregatesFilter<"GeneratedSuggestion"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GeneratedSuggestion"> | Date | string
+  localId?: Prisma.StringNullableWithAggregatesFilter<"GeneratedSuggestion"> | string | null
 }
 
 export type GeneratedSuggestionCreateInput = {
@@ -434,6 +447,7 @@ export type GeneratedSuggestionCreateInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
   user: Prisma.UserCreateNestedOneWithoutGeneratedSuggestionsInput
 }
 
@@ -456,6 +470,7 @@ export type GeneratedSuggestionUncheckedCreateInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
 }
 
 export type GeneratedSuggestionUpdateInput = {
@@ -476,6 +491,7 @@ export type GeneratedSuggestionUpdateInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGeneratedSuggestionsNestedInput
 }
 
@@ -498,6 +514,7 @@ export type GeneratedSuggestionUncheckedUpdateInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GeneratedSuggestionCreateManyInput = {
@@ -519,6 +536,7 @@ export type GeneratedSuggestionCreateManyInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
 }
 
 export type GeneratedSuggestionUpdateManyMutationInput = {
@@ -539,6 +557,7 @@ export type GeneratedSuggestionUpdateManyMutationInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GeneratedSuggestionUncheckedUpdateManyInput = {
@@ -560,6 +579,7 @@ export type GeneratedSuggestionUncheckedUpdateManyInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GeneratedSuggestionListRelationFilter = {
@@ -570,6 +590,11 @@ export type GeneratedSuggestionListRelationFilter = {
 
 export type GeneratedSuggestionOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type GeneratedSuggestionUserIdLocalIdCompoundUniqueInput = {
+  userId: string
+  localId: string
 }
 
 export type GeneratedSuggestionCountOrderByAggregateInput = {
@@ -591,6 +616,7 @@ export type GeneratedSuggestionCountOrderByAggregateInput = {
   decision?: Prisma.SortOrder
   createdTaskId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
 }
 
 export type GeneratedSuggestionAvgOrderByAggregateInput = {
@@ -615,6 +641,7 @@ export type GeneratedSuggestionMaxOrderByAggregateInput = {
   decision?: Prisma.SortOrder
   createdTaskId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
 }
 
 export type GeneratedSuggestionMinOrderByAggregateInput = {
@@ -634,6 +661,7 @@ export type GeneratedSuggestionMinOrderByAggregateInput = {
   decision?: Prisma.SortOrder
   createdTaskId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
 }
 
 export type GeneratedSuggestionSumOrderByAggregateInput = {
@@ -709,6 +737,7 @@ export type GeneratedSuggestionCreateWithoutUserInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
 }
 
 export type GeneratedSuggestionUncheckedCreateWithoutUserInput = {
@@ -729,6 +758,7 @@ export type GeneratedSuggestionUncheckedCreateWithoutUserInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
 }
 
 export type GeneratedSuggestionCreateOrConnectWithoutUserInput = {
@@ -779,6 +809,7 @@ export type GeneratedSuggestionScalarWhereInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFilter<"GeneratedSuggestion"> | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
   createdAt?: Prisma.DateTimeFilter<"GeneratedSuggestion"> | Date | string
+  localId?: Prisma.StringNullableFilter<"GeneratedSuggestion"> | string | null
 }
 
 export type GeneratedSuggestionCreateManyUserInput = {
@@ -799,6 +830,7 @@ export type GeneratedSuggestionCreateManyUserInput = {
   decision?: $Enums.GeneratedSuggestionDecision
   createdTaskId?: string | null
   createdAt?: Date | string
+  localId?: string | null
 }
 
 export type GeneratedSuggestionUpdateWithoutUserInput = {
@@ -819,6 +851,7 @@ export type GeneratedSuggestionUpdateWithoutUserInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GeneratedSuggestionUncheckedUpdateWithoutUserInput = {
@@ -839,6 +872,7 @@ export type GeneratedSuggestionUncheckedUpdateWithoutUserInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GeneratedSuggestionUncheckedUpdateManyWithoutUserInput = {
@@ -859,6 +893,7 @@ export type GeneratedSuggestionUncheckedUpdateManyWithoutUserInput = {
   decision?: Prisma.EnumGeneratedSuggestionDecisionFieldUpdateOperationsInput | $Enums.GeneratedSuggestionDecision
   createdTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -882,6 +917,7 @@ export type GeneratedSuggestionSelect<ExtArgs extends runtime.Types.Extensions.I
   decision?: boolean
   createdTaskId?: boolean
   createdAt?: boolean
+  localId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["generatedSuggestion"]>
 
@@ -904,6 +940,7 @@ export type GeneratedSuggestionSelectCreateManyAndReturn<ExtArgs extends runtime
   decision?: boolean
   createdTaskId?: boolean
   createdAt?: boolean
+  localId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["generatedSuggestion"]>
 
@@ -926,6 +963,7 @@ export type GeneratedSuggestionSelectUpdateManyAndReturn<ExtArgs extends runtime
   decision?: boolean
   createdTaskId?: boolean
   createdAt?: boolean
+  localId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["generatedSuggestion"]>
 
@@ -948,9 +986,10 @@ export type GeneratedSuggestionSelectScalar = {
   decision?: boolean
   createdTaskId?: boolean
   createdAt?: boolean
+  localId?: boolean
 }
 
-export type GeneratedSuggestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "contextTimeMinutes" | "contextEnergy" | "contextUrgency" | "contextUniqueness" | "title" | "nextAction" | "estimatedMinutes" | "tags" | "reasoning" | "confidence" | "model" | "sourceFeatures" | "shortlistHash" | "decision" | "createdTaskId" | "createdAt", ExtArgs["result"]["generatedSuggestion"]>
+export type GeneratedSuggestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "contextTimeMinutes" | "contextEnergy" | "contextUrgency" | "contextUniqueness" | "title" | "nextAction" | "estimatedMinutes" | "tags" | "reasoning" | "confidence" | "model" | "sourceFeatures" | "shortlistHash" | "decision" | "createdTaskId" | "createdAt" | "localId", ExtArgs["result"]["generatedSuggestion"]>
 export type GeneratedSuggestionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -985,6 +1024,7 @@ export type $GeneratedSuggestionPayload<ExtArgs extends runtime.Types.Extensions
     decision: $Enums.GeneratedSuggestionDecision
     createdTaskId: string | null
     createdAt: Date
+    localId: string | null
   }, ExtArgs["result"]["generatedSuggestion"]>
   composites: {}
 }
@@ -1427,6 +1467,7 @@ export interface GeneratedSuggestionFieldRefs {
   readonly decision: Prisma.FieldRef<"GeneratedSuggestion", 'GeneratedSuggestionDecision'>
   readonly createdTaskId: Prisma.FieldRef<"GeneratedSuggestion", 'String'>
   readonly createdAt: Prisma.FieldRef<"GeneratedSuggestion", 'DateTime'>
+  readonly localId: Prisma.FieldRef<"GeneratedSuggestion", 'String'>
 }
     
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { useDataAdapter } from "@/lib/data/data-context";
 
-export function GoalForm() {
-  const router = useRouter();
+export function GoalForm({ onCreated }: { onCreated: () => void }) {
+  const { adapter } = useDataAdapter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,20 +18,10 @@ export function GoalForm() {
     setError(null);
 
     try {
-      const res = await fetch("/api/goals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description: description || undefined }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create goal");
-      }
-
+      await adapter.createGoal({ title, description: description || undefined });
       setTitle("");
       setDescription("");
-      router.refresh();
+      onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -52,7 +42,7 @@ export function GoalForm() {
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={200}
-          className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+          className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           placeholder="e.g., Launch MVP"
         />
       </div>
@@ -67,7 +57,7 @@ export function GoalForm() {
           onChange={(e) => setDescription(e.target.value)}
           maxLength={2000}
           rows={3}
-          className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+          className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           placeholder="What's this goal about?"
         />
       </div>

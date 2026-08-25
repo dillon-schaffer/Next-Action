@@ -4,26 +4,27 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { parseTimeInput, formatTimeMinutes } from "@/lib/time";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { RecommendationResponse } from "@/lib/data/types";
 
-export type RecommendationResponse =
-  | { type: "generated"; recommendationId: string; generatedTask: GeneratedTask; model?: string; meta?: unknown }
-  | { fallback: { message: string; deterministicIdea: string } }
-  | { dailyLimitReached: true; message?: string };
+export type { RecommendationResponse, GeneratedTask } from "@/lib/data/types";
 
-export type GeneratedTask = {
-  title: string;
-  nextAction: string;
-  estimatedMinutes: number;
-  tags: string[];
-  reasoning: string;
-  confidence: "low" | "med" | "high";
-};
+const TOGGLE_BASE =
+  "flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-[length:var(--text-body)] transition-[background-color,border-color,color,transform] duration-200 cursor-pointer [transition-timing-function:var(--ease-out)] hover:-translate-y-px active:translate-y-0";
+// Selected = the rich, full-strength Tea Green (not Ebony) — Ebony stays
+// reserved for the one primary submit action per screen so selecting an
+// option doesn't read as "committing" the same way pressing the button does.
+const TOGGLE_SELECTED = "border-2 border-foreground bg-tea-green text-foreground py-[calc(0.5rem-1px)]";
+const TOGGLE_UNSELECTED = "border-input bg-secondary text-foreground hover:bg-accent";
 
 export function ContextForm({
   onRecommendation,
+  onLoadingChange,
 }: {
   onRecommendation: (result: RecommendationResponse) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }) {
+  const { adapter } = useDataAdapter();
   const [timeInput, setTimeInput] = useState("60");
   const [energy, setEnergy] = useState<"low" | "med" | "high">("med");
   const [uniqueness, setUniqueness] = useState<"familiar" | "related" | "novel">("related");
@@ -38,6 +39,7 @@ export function ContextForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
+    onLoadingChange?.(true);
     setError(null);
 
     try {
@@ -53,32 +55,20 @@ export function ContextForm({
         timeMinutes = Math.round(num);
       }
 
-      const body: Record<string, unknown> = {
-          timeInput: timeInput.trim(),
-          timeMinutes,
-          energy,
-          uniqueness,
-        };
-        if (hasIdea && ideaHint.trim()) {
-          body.ideaHint = ideaHint.trim();
-        }
-        const res = await fetch("/api/recommendations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+      const result = await adapter.requestRecommendation({
+        timeInput: timeInput.trim(),
+        timeMinutes,
+        energy,
+        uniqueness,
+        ideaHint: hasIdea && ideaHint.trim() ? ideaHint.trim() : undefined,
+      });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to get suggestion");
-      }
-
-      const result = await res.json();
-      onRecommendation(result as RecommendationResponse);
+      onRecommendation(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
+      onLoadingChange?.(false);
     }
   }
 
@@ -94,7 +84,7 @@ export function ContextForm({
           value={timeInput}
           onChange={(e) => setTimeInput(e.target.value)}
           required
-          className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+          className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           placeholder="e.g. 45m, 2h, 1d or 60"
         />
         {timeDisplay != null && (
@@ -112,11 +102,7 @@ export function ContextForm({
               key={level}
               type="button"
               onClick={() => setEnergy(level)}
-              className={`flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-[length:var(--text-body)] transition-colors duration-150 cursor-pointer [transition-timing-function:var(--ease-out)] ${
-                energy === level
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-background hover:bg-accent"
-              }`}
+              className={`${TOGGLE_BASE} ${energy === level ? TOGGLE_SELECTED : TOGGLE_UNSELECTED}`}
             >
               {level.charAt(0).toUpperCase() + level.slice(1)}
             </button>
@@ -136,18 +122,14 @@ export function ContextForm({
               key={value}
               type="button"
               onClick={() => setUniqueness(value)}
-              className={`flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-[length:var(--text-body)] transition-colors duration-150 cursor-pointer [transition-timing-function:var(--ease-out)] ${
-                uniqueness === value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-background hover:bg-accent"
-              }`}
+              className={`${TOGGLE_BASE} ${uniqueness === value ? TOGGLE_SELECTED : TOGGLE_UNSELECTED}`}
             >
               {label}
             </button>
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          Familiar: same kind of task I've done before. Related: similar/adjacent to what I've done. Novel: completely new task/skill I haven't tried.
+          Familiar: same kind of task I&rsquo;ve done before. Related: similar/adjacent to what I&rsquo;ve done. Novel: completely new task/skill I haven&rsquo;t tried.
         </p>
       </div>
 
@@ -159,36 +141,44 @@ export function ContextForm({
               key={choice}
               type="button"
               onClick={() => setHasIdea(choice === "Yes")}
-              className={`flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-[length:var(--text-body)] transition-colors duration-150 cursor-pointer [transition-timing-function:var(--ease-out)] ${
-                (choice === "Yes" && hasIdea) || (choice === "No" && !hasIdea)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-background hover:bg-accent"
+              className={`${TOGGLE_BASE} ${
+                (choice === "Yes" && hasIdea) || (choice === "No" && !hasIdea) ? TOGGLE_SELECTED : TOGGLE_UNSELECTED
               }`}
             >
               {choice}
             </button>
           ))}
         </div>
-        {hasIdea && (
-          <>
+        {/* Grid-rows expand/collapse: animates smoothly without measuring height in JS. */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-200 [transition-timing-function:var(--ease-out)] ${
+            hasIdea ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          }`}
+        >
+          <div className="space-y-2 overflow-hidden">
             <input
               type="text"
               value={ideaHint}
               onChange={(e) => setIdeaHint(e.target.value)}
               maxLength={500}
-              className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+              tabIndex={hasIdea ? 0 : -1}
+              className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
               placeholder="e.g. something outside, something productive, something relaxing"
             />
             <p className="text-xs text-muted-foreground">
-              Optional: tell the assistant what kind of task you're in the mood for. It'll use this as a hint.
+              Optional: tell the assistant what kind of task you&rsquo;re in the mood for. It&rsquo;ll use this as a hint.
             </p>
-          </>
-        )}
+          </div>
+        </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button type="submit" loading={isLoading} className="w-full cursor-pointer">
+      <Button
+        type="submit"
+        loading={isLoading}
+        className="w-full cursor-pointer"
+      >
         {isLoading ? "Finding a suggestion for you…" : "Get recommendation"}
       </Button>
     </form>

@@ -38,6 +38,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Named palette tokens — see docs/Design-System.md for the full contrast
+     table and semantic rules (in particular: Light Blue never sits directly
+     behind body text, only 3.3:1 with Ebony — border/stripe/header use only). */
+  --color-light-blue: var(--light-blue);
+  --color-frozen-water: var(--frozen-water);
+  --color-frosted-mint: var(--frosted-mint);
+  --color-tea-green: var(--tea-green);
+  --color-ebony: var(--ebony);
+  --color-header: var(--header);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -66,24 +75,47 @@
   --leading-tight: 1.25;
   --leading-snug: 1.375;
   --leading-normal: 1.5;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  /* Full palette recolor, tuned pass — see docs/Design-System.md for the
+     before/after and the reasoning. The five source colors below are kept
+     at full strength ONLY for small accents (dots, stripes, borders, the
+     header band, a "selected" pop) — every LARGE surface (page, panel,
+     card) uses a tint of one of them blended toward white instead of the
+     raw hex. Full-strength Tea Green next to full-strength Frosted Mint
+     next to full-strength Frozen Water, all similar mid-light values, read
+     as a patchwork of disconnected blocks; blending each into white first
+     keeps the same hue relationships but turns them into one calm,
+     progressively-deeper family instead. Ebony-on-Light-Blue is still only
+     3.3:1 (nothing in this palette fixes that), so Light Blue stays a
+     small-accent-only color even at full strength — never a large text-
+     bearing fill. Ebony passes 5.3–6.0:1 on every tint below. */
+  --ebony: #5f634f;
+  --light-blue: #9bc4cb;
+  --frozen-water: #cfebdf;
+  --frosted-mint: #e2fadb;
+  --tea-green: #dbefbc;
+
+  --background: #f6fbf9; /* Frozen Water at 18% over white — page canvas */
+  --foreground: var(--ebony);
+  --card: #e7f4d1; /* Tea Green at 68% over white — primary card surface */
+  --card-foreground: var(--ebony);
+  --popover: #f3fdf1;
+  --popover-foreground: var(--ebony);
+  --primary: var(--ebony); /* every primary/core-loop button */
+  --primary-foreground: var(--frosted-mint);
+  --secondary: #f3fdf1; /* Frosted Mint at 40% over white — content panel + inputs */
+  --secondary-foreground: var(--ebony);
+  --muted: #f3fdf1;
+  --muted-foreground: var(--ebony);
+  --accent: #e3f3cd; /* hover tint, a touch deeper than --secondary */
+  --accent-foreground: var(--ebony);
+  /* Darkened from the usual bright red (only 1.7:1 on a green surface) —
+     this deep brick red passes 11:1+ as text on every surface below,
+     7.6:1 even on Light Blue, and still gives light button text 14:1+. */
+  --destructive: #551010;
+  --header: #d2e4e8; /* Light Blue at 45% over white — soft enough to sit next to the green tiers without a hard blue/green seam */
+  --border: color-mix(in oklab, var(--ebony) 12%, transparent);
+  --input: color-mix(in oklab, var(--ebony) 30%, transparent);
+  --ring: var(--ebony);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -100,24 +132,30 @@
 }
 
 .dark {
+  --ebony: #b9c2a8;
+  --light-blue: #4f7078;
+  --frozen-water: #24312c;
+  --frosted-mint: #2a352a;
+  --tea-green: #333d29;
   --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
+  --foreground: var(--ebony);
+  --card: var(--tea-green);
+  --card-foreground: var(--ebony);
+  --popover: var(--frosted-mint);
+  --popover-foreground: var(--ebony);
+  --primary: var(--ebony);
+  --primary-foreground: oklch(0.141 0.005 285.823);
+  --secondary: var(--frosted-mint);
+  --secondary-foreground: var(--ebony);
+  --muted: var(--frosted-mint);
+  --muted-foreground: var(--ebony);
+  --accent: #3a4a3f;
+  --accent-foreground: var(--ebony);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --header: #38474a;
+  --border: color-mix(in oklab, var(--ebony) 20%, transparent);
+  --input: color-mix(in oklab, var(--ebony) 45%, transparent);
+  --ring: var(--ebony);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -131,6 +169,55 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion: short, ease-out, and off entirely for prefers-reduced-motion.
+   This blanket rule is the safety net — it catches every transition/animation
+   below (and any future one) without needing a motion-safe: prefix on each.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-card-in {
+    animation: card-in 220ms var(--ease-out) both;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  .animate-shimmer {
+    background-image: linear-gradient(
+      100deg,
+      var(--muted) 40%,
+      color-mix(in oklab, var(--muted) 60%, white) 50%,
+      var(--muted) 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
 }
 
 @layer base {

@@ -10,17 +10,42 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MomentumIndicator } from "@/components/momentum-indicator";
 import { formatTimeMinutes } from "@/lib/time";
-import {
-  ContextForm,
-  type RecommendationResponse,
-} from "./context-form";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { RecommendationResponse } from "@/lib/data/types";
+import { ContextForm } from "./context-form";
+
+function RecommendationSkeleton() {
+  return (
+    <Card className="border-l-4 border-l-foreground/20" aria-hidden aria-busy="true">
+      <CardHeader>
+        <div className="animate-shimmer h-5 w-40 rounded" />
+        <div className="animate-shimmer h-3.5 w-56 rounded" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="animate-shimmer h-5 w-3/4 rounded" />
+        <div className="space-y-2">
+          <div className="animate-shimmer h-3.5 w-full rounded" />
+          <div className="animate-shimmer h-3.5 w-2/3 rounded" />
+        </div>
+        <div className="flex gap-2">
+          <div className="animate-shimmer h-9 w-32 rounded-[var(--radius-md)]" />
+          <div className="animate-shimmer h-9 w-20 rounded-[var(--radius-md)]" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function DashboardClient() {
+  const { adapter } = useDataAdapter();
   const [result, setResult] = useState<RecommendationResponse | null>(null);
+  const [isRequesting, setIsRequesting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
+  const [momentumTick, setMomentumTick] = useState(0);
 
   function handleRecommendation(response: RecommendationResponse) {
     setResult(response);
@@ -33,18 +58,10 @@ export function DashboardClient() {
     setIsAdding(true);
     setAddedMessage(null);
     try {
-      const res = await fetch(
-        `/api/recommendations/generated/${result.recommendationId}/confirm`,
-        { method: "POST" },
-      );
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to add to tasks");
-      }
-
+      await adapter.confirmSuggestion(result.recommendationId);
       setAddedMessage("Added. It's in your Tasks list.");
       setResult(null);
+      setMomentumTick((n) => n + 1);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -57,15 +74,7 @@ export function DashboardClient() {
 
     setIsSkipping(true);
     try {
-      const res = await fetch(
-        `/api/recommendations/generated/${result.recommendationId}/skip`,
-        { method: "POST" },
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to skip");
-      }
-
+      await adapter.skipSuggestion(result.recommendationId);
       setResult(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Something went wrong");
@@ -76,6 +85,8 @@ export function DashboardClient() {
 
   return (
     <div className="flex flex-col gap-6">
+      <MomentumIndicator refreshKey={momentumTick} />
+
       <Card>
         <CardHeader>
           <CardTitle>Set your context</CardTitle>
@@ -84,16 +95,23 @@ export function DashboardClient() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ContextForm onRecommendation={handleRecommendation} />
+          <ContextForm onRecommendation={handleRecommendation} onLoadingChange={setIsRequesting} />
         </CardContent>
       </Card>
 
       {addedMessage && (
-        <p className="text-sm text-muted-foreground">{addedMessage}</p>
+        <p className="animate-card-in flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground" aria-hidden>
+            ✓
+          </span>
+          {addedMessage}
+        </p>
       )}
 
-      {result && "type" in result && result.type === "generated" && (
-        <Card className="border-primary/50 bg-primary/5">
+      {isRequesting && <RecommendationSkeleton />}
+
+      {!isRequesting && result && "type" in result && result.type === "generated" && (
+        <Card className="border-l-4 border-l-foreground">
           <CardHeader>
             <CardTitle>Your next action</CardTitle>
             <CardDescription>
@@ -102,7 +120,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium">
+              <span className="rounded border border-foreground/20 bg-frosted-mint px-2 py-0.5 text-xs font-medium text-foreground">
                 AI-suggested
               </span>
             </div>
@@ -124,15 +142,17 @@ export function DashboardClient() {
                 </>
               )}
               <span>·</span>
-              <span
-                className={`rounded px-2 py-0.5 ${
-                  result.generatedTask.confidence === "high"
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : result.generatedTask.confidence === "med"
-                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                }`}
-              >
+              <span className="inline-flex items-center gap-1.5 rounded border border-foreground/20 bg-frosted-mint px-2 py-0.5 text-foreground">
+                <span
+                  className={`size-1.5 rounded-full ${
+                    result.generatedTask.confidence === "high"
+                      ? "bg-primary"
+                      : result.generatedTask.confidence === "med"
+                        ? "bg-light-blue"
+                        : "bg-foreground/25"
+                  }`}
+                  aria-hidden
+                />
                 {result.generatedTask.confidence} confidence
               </span>
             </div>
@@ -157,8 +177,8 @@ export function DashboardClient() {
         </Card>
       )}
 
-      {result && "fallback" in result && (
-        <Card>
+      {!isRequesting && result && "fallback" in result && (
+        <Card className="border-l-4 border-l-light-blue bg-frozen-water">
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
               {result.fallback.message}
@@ -170,8 +190,8 @@ export function DashboardClient() {
         </Card>
       )}
 
-      {result && "dailyLimitReached" in result && result.dailyLimitReached && (
-        <Card>
+      {!isRequesting && result && "dailyLimitReached" in result && result.dailyLimitReached && (
+        <Card className="border-l-4 border-l-light-blue bg-frozen-water">
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
               {"message" in result ? result.message : "You've reached your 5 AI suggestions for today. Try again tomorrow."}

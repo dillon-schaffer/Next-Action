@@ -4,8 +4,9 @@
 - **Frontend:** Next.js (App Router) + TypeScript
 - **UI:** Tailwind CSS + shadcn/ui
 - **Backend:** Next.js Route Handlers (`/app/api/...`) + service layer
-- **Database:** PostgreSQL (Neon) + Prisma ORM
-- **Auth:** NextAuth/Auth.js
+- **Database:** PostgreSQL (Neon) + Prisma ORM (signed-in users)
+- **Client storage:** localStorage (guest users) — see `docs/Guest-First-Architecture.md`
+- **Auth:** NextAuth/Auth.js — optional, framed as "save progress / sync"; the app is guest-first and fully usable with no account
 - **Email:** Resend (magic links)
 - **Hosting:** Vercel (web) + Neon (DB)
 - **LLM:** Anthropic Claude (Sonnet tier)

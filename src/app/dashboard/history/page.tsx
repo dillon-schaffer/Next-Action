@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-import { authOptions } from "@/auth.config";
 import {
   Card,
   CardContent,
@@ -11,34 +11,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/lib/db";
+import { EmptyState } from "@/components/empty-state";
+import { PageSurface } from "@/components/page-surface";
 import { formatTimeMinutes } from "@/lib/time";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { SuggestionHistoryItem } from "@/lib/data/types";
 
-export default async function HistoryPage() {
-  const session = await getServerSession(authOptions);
+export default function HistoryPage() {
+  const { adapter, isReady } = useDataAdapter();
+  const [items, setItems] = useState<SuggestionHistoryItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/dashboard/history");
-  }
-
-  const userId = (session as any)?.user?.id as string;
-  const events = await prisma.recommendationEvent.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-    include: {
-      task: {
-        select: {
-          id: true,
-          title: true,
-          notes: true,
-        },
-      },
-    },
-  });
+  useEffect(() => {
+    if (!isReady) return;
+    let cancelled = false;
+    (async () => {
+      const history = await adapter.listSuggestionHistory();
+      if (!cancelled) {
+        setItems(history);
+        setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [adapter, isReady]);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+    <PageSurface maxWidth="max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h1">
@@ -53,57 +53,61 @@ export default async function HistoryPage() {
         </Button>
       </div>
 
-      {events.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-body text-muted-foreground">
-            No recommendations yet. Get your first recommendation from the
-            dashboard.
-          </CardContent>
-        </Card>
+      {!loaded ? (
+        <p className="text-body text-muted-foreground">Loading…</p>
+      ) : items.length === 0 ? (
+        <EmptyState>
+          No history yet — once you accept or skip a suggestion, it&rsquo;ll show up here.
+        </EmptyState>
       ) : (
         <div className="space-y-4">
-          {events.map((event) => (
-            <Card key={event.id}>
+          {items.map((item) => (
+            <Card
+              key={item.id}
+              className="border-l-4 border-l-light-blue bg-frozen-water transition-[transform,border-color] duration-200 [transition-timing-function:var(--ease-out)] hover:-translate-y-px hover:border-foreground/25"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle>
-                      {event.task.title}
+                      {item.title}
                     </CardTitle>
                     <CardDescription className="mt-1 text-small">
-                      {event.explanation}
+                      {item.reasoning}
                     </CardDescription>
                   </div>
                   <span
-                    className={`rounded px-2 py-1 text-xs font-medium ${
-                      event.decision === "accepted"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : event.decision === "skipped"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                    className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${
+                      item.decision === "accepted"
+                        ? "border border-foreground/30 bg-tea-green text-foreground"
+                        : item.decision === "skipped"
+                          ? "border border-foreground/30 text-foreground"
+                          : "bg-frosted-mint text-foreground"
                     }`}
                   >
-                    {event.decision === "accepted"
+                    {item.decision === "accepted"
                       ? "Accepted"
-                      : event.decision === "skipped"
+                      : item.decision === "skipped"
                         ? "Skipped"
-                        : "Recommended"}
+                        : "Pending"}
                   </span>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-4 text-small text-muted-foreground">
                   <span>
-                    Time: {event.contextTimeMinutes != null ? formatTimeMinutes(event.contextTimeMinutes) : "—"}
+                    Time: {formatTimeMinutes(item.contextTimeMinutes)}
                   </span>
                   <span>
-                    Energy: {event.contextEnergy}
+                    Energy: {item.contextEnergy}
                   </span>
+                  {item.contextUniqueness && (
+                    <span>
+                      Uniqueness: {item.contextUniqueness}
+                    </span>
+                  )}
                   <span>
-                    Urgency: {event.contextUrgency}
-                  </span>
-                  <span>
-                    {new Date(event.createdAt).toLocaleString()}
+                    {new Date(item.createdAt).toLocaleString()}
                   </span>
                 </div>
               </CardContent>
@@ -111,6 +115,6 @@ export default async function HistoryPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageSurface>
   );
 }

@@ -116,6 +116,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: e2eTestMode ? "jwt" : "database",
   },
+  pages: {
+    // Custom "Save progress" screen instead of next-auth's unstyled default.
+    signIn: "/auth/sign-in",
+  },
   callbacks: {
     ...(e2eTestMode
       ? {

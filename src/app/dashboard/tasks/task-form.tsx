@@ -1,17 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { Goal } from "@/lib/data/types";
 
-type Goal = {
-  id: string;
-  title: string;
-};
-
-export function TaskForm({ goals }: { goals: Goal[] }) {
-  const router = useRouter();
+export function TaskForm({ goals, onCreated }: { goals: Goal[]; onCreated: () => void }) {
+  const { adapter } = useDataAdapter();
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [goalId, setGoalId] = useState("");
@@ -26,7 +22,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
     setError(null);
 
     try {
-      const body: any = {
+      const body: Parameters<typeof adapter.createTask>[0] = {
         title,
         notes: notes || undefined,
         goalId: goalId || undefined,
@@ -39,23 +35,14 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
         body.priority = parseInt(priority, 10);
       }
 
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create task");
-      }
+      await adapter.createTask(body);
 
       setTitle("");
       setNotes("");
       setGoalId("");
       setEstimatedInput("");
       setPriority("");
-      router.refresh();
+      onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -76,7 +63,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={200}
-          className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+          className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           placeholder="e.g., Write recommendation rules"
         />
       </div>
@@ -91,7 +78,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
           onChange={(e) => setNotes(e.target.value)}
           maxLength={4000}
           rows={3}
-          className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+          className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           placeholder="Any additional context..."
         />
       </div>
@@ -105,7 +92,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
             id="goalId"
             value={goalId}
             onChange={(e) => setGoalId(e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+            className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
           >
             <option value="">None</option>
             {goals.map((goal) => (
@@ -125,7 +112,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
             type="text"
             value={estimatedInput}
             onChange={(e) => setEstimatedInput(e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+            className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
             placeholder="e.g. 45m, 2h, 1d"
           />
         </div>
@@ -141,7 +128,7 @@ export function TaskForm({ goals }: { goals: Goal[] }) {
             onChange={(e) => setPriority(e.target.value)}
             min="1"
             max="5"
-            className="w-full rounded-[var(--radius-md)] border border-input bg-background px-3 py-2 text-[length:var(--text-body)] ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
+            className="w-full rounded-[var(--radius-md)] border border-input bg-secondary px-3 py-2 text-[length:var(--text-body)] text-foreground ring-offset-background transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [transition-timing-function:var(--ease-out)]"
             placeholder="1-5"
           />
         </div>

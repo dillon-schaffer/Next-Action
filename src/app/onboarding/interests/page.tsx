@@ -1,40 +1,58 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+"use client";
 
-import { authOptions } from "@/auth.config";
-import { getOnboardingStatus, listInterestsForUser } from "@/lib/interests";
+import { useEffect, useState } from "react";
+
+import { PageSurface } from "@/components/page-surface";
+import { useDataAdapter } from "@/lib/data/data-context";
 import { OnboardingInterestsForm } from "./onboarding-interests-form";
 
-export default async function OnboardingInterestsPage() {
-  const session = await getServerSession(authOptions);
+export default function OnboardingInterestsPage() {
+  const { adapter, isReady } = useDataAdapter();
+  const [initialInterests, setInitialInterests] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/onboarding/interests");
+  useEffect(() => {
+    if (!isReady) return;
+    let cancelled = false;
+    (async () => {
+      const status = await adapter.getOnboardingStatus();
+      // Load whatever's already saved even if onboarding isn't "complete" yet —
+      // interests persist as soon as they're added, before Continue is clicked.
+      const interests = await adapter.listInterests();
+      if (cancelled) return;
+      setIsEditing(status.completed);
+      setInitialInterests(interests);
+      setLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [adapter, isReady]);
+
+  if (!isReady || !loaded) {
+    return (
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
+        <p className="text-body text-muted-foreground">Loading…</p>
+      </div>
+    );
   }
 
-  const userId = (session as any).user?.id as string;
-  const { completed } = await getOnboardingStatus(userId);
-  const initialInterests = completed
-    ? (await listInterestsForUser(userId)).map((r) => r.label)
-    : [];
-
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-8">
-      <main className="mx-auto w-full max-w-2xl space-y-6">
-        <div className="space-y-1 text-center">
-          <h1 className="text-h1">
-            {completed ? "Edit your interests" : "What are you interested in?"}
-          </h1>
-          <p className="text-body text-muted-foreground">
-            We’ll use this to suggest relevant next actions. You can change it
-            later.
-          </p>
-        </div>
-        <OnboardingInterestsForm
-          isEditing={completed}
-          initialInterests={initialInterests}
-        />
-      </main>
-    </div>
+    <PageSurface maxWidth="max-w-2xl">
+      <div className="space-y-1 border-b border-foreground/15 pb-5">
+        <h1 className="text-h1">
+          {isEditing ? "Edit your interests" : "What are you interested in?"}
+        </h1>
+        <p className="text-body text-muted-foreground">
+          We’ll use this to suggest relevant next actions. You can change it
+          later.
+        </p>
+      </div>
+      <OnboardingInterestsForm
+        isEditing={isEditing}
+        initialInterests={initialInterests}
+      />
+    </PageSurface>
   );
 }

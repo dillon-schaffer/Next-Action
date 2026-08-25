@@ -51,6 +51,7 @@ export type TaskMinAggregateOutputType = {
   estimatedInput: string | null
   deadlineAt: Date | null
   lastTouchedAt: Date | null
+  localId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +69,7 @@ export type TaskMaxAggregateOutputType = {
   estimatedInput: string | null
   deadlineAt: Date | null
   lastTouchedAt: Date | null
+  localId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -85,6 +87,7 @@ export type TaskCountAggregateOutputType = {
   estimatedInput: number
   deadlineAt: number
   lastTouchedAt: number
+  localId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -116,6 +119,7 @@ export type TaskMinAggregateInputType = {
   estimatedInput?: true
   deadlineAt?: true
   lastTouchedAt?: true
+  localId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -133,6 +137,7 @@ export type TaskMaxAggregateInputType = {
   estimatedInput?: true
   deadlineAt?: true
   lastTouchedAt?: true
+  localId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -150,6 +155,7 @@ export type TaskCountAggregateInputType = {
   estimatedInput?: true
   deadlineAt?: true
   lastTouchedAt?: true
+  localId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -254,6 +260,7 @@ export type TaskGroupByOutputType = {
   estimatedInput: string | null
   deadlineAt: Date | null
   lastTouchedAt: Date | null
+  localId: string | null
   createdAt: Date
   updatedAt: Date
   _count: TaskCountAggregateOutputType | null
@@ -294,6 +301,7 @@ export type TaskWhereInput = {
   estimatedInput?: Prisma.StringNullableFilter<"Task"> | string | null
   deadlineAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
   lastTouchedAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
+  localId?: Prisma.StringNullableFilter<"Task"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Task"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Task"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -314,6 +322,7 @@ export type TaskOrderByWithRelationInput = {
   estimatedInput?: Prisma.SortOrderInput | Prisma.SortOrder
   deadlineAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastTouchedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  localId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -323,6 +332,7 @@ export type TaskOrderByWithRelationInput = {
 
 export type TaskWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId_localId?: Prisma.TaskUserIdLocalIdCompoundUniqueInput
   AND?: Prisma.TaskWhereInput | Prisma.TaskWhereInput[]
   OR?: Prisma.TaskWhereInput[]
   NOT?: Prisma.TaskWhereInput | Prisma.TaskWhereInput[]
@@ -337,12 +347,13 @@ export type TaskWhereUniqueInput = Prisma.AtLeast<{
   estimatedInput?: Prisma.StringNullableFilter<"Task"> | string | null
   deadlineAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
   lastTouchedAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
+  localId?: Prisma.StringNullableFilter<"Task"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Task"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Task"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   goal?: Prisma.XOR<Prisma.GoalNullableScalarRelationFilter, Prisma.GoalWhereInput> | null
   recommendationEvents?: Prisma.RecommendationEventListRelationFilter
-}, "id">
+}, "id" | "userId_localId">
 
 export type TaskOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -357,6 +368,7 @@ export type TaskOrderByWithAggregationInput = {
   estimatedInput?: Prisma.SortOrderInput | Prisma.SortOrder
   deadlineAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastTouchedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  localId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TaskCountOrderByAggregateInput
@@ -382,6 +394,7 @@ export type TaskScalarWhereWithAggregatesInput = {
   estimatedInput?: Prisma.StringNullableWithAggregatesFilter<"Task"> | string | null
   deadlineAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Task"> | Date | string | null
   lastTouchedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Task"> | Date | string | null
+  localId?: Prisma.StringNullableWithAggregatesFilter<"Task"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Task"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Task"> | Date | string
 }
@@ -397,6 +410,7 @@ export type TaskCreateInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTasksInput
@@ -417,6 +431,7 @@ export type TaskUncheckedCreateInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutTaskInput
@@ -433,6 +448,7 @@ export type TaskUpdateInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTasksNestedInput
@@ -453,6 +469,7 @@ export type TaskUncheckedUpdateInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutTaskNestedInput
@@ -471,6 +488,7 @@ export type TaskCreateManyInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -486,6 +504,7 @@ export type TaskUpdateManyMutationInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -503,6 +522,7 @@ export type TaskUncheckedUpdateManyInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -515,6 +535,11 @@ export type TaskListRelationFilter = {
 
 export type TaskOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TaskUserIdLocalIdCompoundUniqueInput = {
+  userId: string
+  localId: string
 }
 
 export type TaskCountOrderByAggregateInput = {
@@ -530,6 +555,7 @@ export type TaskCountOrderByAggregateInput = {
   estimatedInput?: Prisma.SortOrder
   deadlineAt?: Prisma.SortOrder
   lastTouchedAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -553,6 +579,7 @@ export type TaskMaxOrderByAggregateInput = {
   estimatedInput?: Prisma.SortOrder
   deadlineAt?: Prisma.SortOrder
   lastTouchedAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -570,6 +597,7 @@ export type TaskMinOrderByAggregateInput = {
   estimatedInput?: Prisma.SortOrder
   deadlineAt?: Prisma.SortOrder
   lastTouchedAt?: Prisma.SortOrder
+  localId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -698,6 +726,7 @@ export type TaskCreateWithoutUserInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   goal?: Prisma.GoalCreateNestedOneWithoutTasksInput
@@ -716,6 +745,7 @@ export type TaskUncheckedCreateWithoutUserInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutTaskInput
@@ -763,6 +793,7 @@ export type TaskScalarWhereInput = {
   estimatedInput?: Prisma.StringNullableFilter<"Task"> | string | null
   deadlineAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
   lastTouchedAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
+  localId?: Prisma.StringNullableFilter<"Task"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Task"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Task"> | Date | string
 }
@@ -778,6 +809,7 @@ export type TaskCreateWithoutGoalInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTasksInput
@@ -796,6 +828,7 @@ export type TaskUncheckedCreateWithoutGoalInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutTaskInput
@@ -838,6 +871,7 @@ export type TaskCreateWithoutRecommendationEventsInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTasksInput
@@ -857,6 +891,7 @@ export type TaskUncheckedCreateWithoutRecommendationEventsInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -888,6 +923,7 @@ export type TaskUpdateWithoutRecommendationEventsInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTasksNestedInput
@@ -907,6 +943,7 @@ export type TaskUncheckedUpdateWithoutRecommendationEventsInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -923,6 +960,7 @@ export type TaskCreateManyUserInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -938,6 +976,7 @@ export type TaskUpdateWithoutUserInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   goal?: Prisma.GoalUpdateOneWithoutTasksNestedInput
@@ -956,6 +995,7 @@ export type TaskUncheckedUpdateWithoutUserInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutTaskNestedInput
@@ -973,6 +1013,7 @@ export type TaskUncheckedUpdateManyWithoutUserInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -989,6 +1030,7 @@ export type TaskCreateManyGoalInput = {
   estimatedInput?: string | null
   deadlineAt?: Date | string | null
   lastTouchedAt?: Date | string | null
+  localId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1004,6 +1046,7 @@ export type TaskUpdateWithoutGoalInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTasksNestedInput
@@ -1022,6 +1065,7 @@ export type TaskUncheckedUpdateWithoutGoalInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutTaskNestedInput
@@ -1039,6 +1083,7 @@ export type TaskUncheckedUpdateManyWithoutGoalInput = {
   estimatedInput?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deadlineAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastTouchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  localId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1087,6 +1132,7 @@ export type TaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   estimatedInput?: boolean
   deadlineAt?: boolean
   lastTouchedAt?: boolean
+  localId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1108,6 +1154,7 @@ export type TaskSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   estimatedInput?: boolean
   deadlineAt?: boolean
   lastTouchedAt?: boolean
+  localId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1127,6 +1174,7 @@ export type TaskSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   estimatedInput?: boolean
   deadlineAt?: boolean
   lastTouchedAt?: boolean
+  localId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1146,11 +1194,12 @@ export type TaskSelectScalar = {
   estimatedInput?: boolean
   deadlineAt?: boolean
   lastTouchedAt?: boolean
+  localId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "goalId" | "title" | "notes" | "status" | "priority" | "urgency" | "estimatedMinutes" | "estimatedInput" | "deadlineAt" | "lastTouchedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["task"]>
+export type TaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "goalId" | "title" | "notes" | "status" | "priority" | "urgency" | "estimatedMinutes" | "estimatedInput" | "deadlineAt" | "lastTouchedAt" | "localId" | "createdAt" | "updatedAt", ExtArgs["result"]["task"]>
 export type TaskInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   goal?: boolean | Prisma.Task$goalArgs<ExtArgs>
@@ -1186,6 +1235,7 @@ export type $TaskPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     estimatedInput: string | null
     deadlineAt: Date | null
     lastTouchedAt: Date | null
+    localId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["task"]>
@@ -1626,6 +1676,7 @@ export interface TaskFieldRefs {
   readonly estimatedInput: Prisma.FieldRef<"Task", 'String'>
   readonly deadlineAt: Prisma.FieldRef<"Task", 'DateTime'>
   readonly lastTouchedAt: Prisma.FieldRef<"Task", 'DateTime'>
+  readonly localId: Prisma.FieldRef<"Task", 'String'>
   readonly createdAt: Prisma.FieldRef<"Task", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Task", 'DateTime'>
 }

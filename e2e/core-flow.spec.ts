@@ -16,15 +16,19 @@ test("core flow: get AI suggestion → add to tasks or skip → request next", a
   await credsForm.getByLabel(/email/i).fill(E2E_TEST_EMAIL);
   await credsForm.locator('input[name="password"]').fill(E2E_TEST_SECRET);
   await credsForm.getByRole("button", { name: /sign in with credentials/i }).click();
-  // May land on onboarding (first sign-in) or dashboard
-  await expect(page).toHaveURL(/\/(dashboard|onboarding\/interests)/, { timeout: 15_000 });
-  if (page.url().includes("/onboarding/interests")) {
-    await page.getByRole("button", { name: /skip for now|continue/i }).click();
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+
+  // The dashboard shows a brief loading state while it asks the server
+  // whether onboarding is complete (may land on onboarding on first sign-in,
+  // or straight on the dashboard) — wait for whichever real destination
+  // shows up rather than racing the URL, which briefly says "/dashboard"
+  // either way.
+  const skipButton = page.getByRole("button", { name: /^skip for now$/i });
+  const getRecommendationButton = page.getByRole("button", { name: /get recommendation/i });
+  await expect(skipButton.or(getRecommendationButton)).toBeVisible({ timeout: 15_000 });
+  if (await skipButton.isVisible()) {
+    await skipButton.click();
+    await expect(getRecommendationButton).toBeVisible({ timeout: 10_000 });
   }
-  await expect(
-    page.getByRole("button", { name: /get recommendation/i }),
-  ).toBeVisible({ timeout: 10_000 });
 
   // Request suggestion (always generated-only: new unique task or fallback)
   await page.getByRole("button", { name: /get recommendation/i }).click();

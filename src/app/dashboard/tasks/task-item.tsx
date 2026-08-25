@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -11,21 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatTimeMinutes } from "@/lib/time";
+import { useDataAdapter } from "@/lib/data/data-context";
+import type { Task } from "@/lib/data/types";
 
-type TaskItemProps = {
-  task: {
-    id: string;
-    title: string;
-    notes: string | null;
-    estimatedMinutes: number | null;
-    priority: number | null;
-    deadlineAt: Date | null;
-    goal: { title: string } | null;
-  };
-};
-
-export function TaskItem({ task }: TaskItemProps) {
-  const router = useRouter();
+export function TaskItem({ task, onDeleted }: { task: Task; onDeleted: () => void }) {
+  const { adapter } = useDataAdapter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
@@ -34,19 +23,17 @@ export function TaskItem({ task }: TaskItemProps) {
     }
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        alert("Failed to delete task");
-        return;
-      }
-      router.refresh();
+      await adapter.archiveTask(task.id);
+      onDeleted();
+    } catch {
+      alert("Failed to delete task");
     } finally {
       setIsDeleting(false);
     }
   }
 
   return (
-    <Card>
+    <Card className="transition-[transform,border-color] duration-200 [transition-timing-function:var(--ease-out)] hover:-translate-y-px hover:border-foreground/25">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -57,9 +44,9 @@ export function TaskItem({ task }: TaskItemProps) {
               </CardDescription>
             )}
             <div className="mt-2 flex flex-wrap gap-2 text-small text-muted-foreground">
-              {task.goal && (
-                <span className="rounded bg-muted px-2 py-0.5">
-                  {task.goal.title}
+              {task.goalTitle && (
+                <span className="rounded border border-foreground/20 bg-frosted-mint px-2 py-0.5 text-foreground">
+                  {task.goalTitle}
                 </span>
               )}
               {task.estimatedMinutes != null && (

@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,8 @@ export function HeaderAuth({
 }: {
   session: { user?: { name?: string | null } } | null;
 }) {
+  const pathname = usePathname();
+
   if (session) {
     return (
       <Button
@@ -24,7 +27,9 @@ export function HeaderAuth({
 
   return (
     <Button variant="outline" size="sm" asChild>
-      <Link href="/api/auth/signin">Sign in</Link>
+      <Link href={`/auth/sign-in?callbackUrl=${encodeURIComponent(pathname || "/dashboard")}`}>
+        Save progress
+      </Link>
     </Button>
   );
 }

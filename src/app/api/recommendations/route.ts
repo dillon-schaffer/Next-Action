@@ -5,57 +5,94 @@ import { z } from "zod";
 import { authOptions } from "@/auth.config";
 import { listInterestsForUser } from "@/lib/interests";
 import { parseTimeInput } from "@/lib/time";
-import { isTooSimilar, getUniquenessThreshold } from "@/lib/similarity";
+import { getUniquenessThreshold } from "@/lib/similarity";
 import { canUseGeneratedSuggestion } from "@/lib/llm/generated-quota";
-import { getGeneratedSuggestion } from "@/lib/llm/generate-suggestion";
+import { getGeneratedSuggestionWithUniquenessGuard } from "@/lib/llm/generate-suggestion";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = (session as any)?.user?.id as string | undefined;
+  const userId = session?.user?.id;
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const events = await prisma.recommendationEvent.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-    include: {
-      task: {
-        select: {
-          id: true,
-          title: true,
-          notes: true,
+  const [events, generatedSuggestions] = await Promise.all([
+    prisma.recommendationEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        task: {
+          select: {
+            id: true,
+            title: true,
+            notes: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.generatedSuggestion.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        title: true,
+        nextAction: true,
+        reasoning: true,
+        decision: true,
+        contextTimeMinutes: true,
+        contextEnergy: true,
+        contextUniqueness: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
-  return NextResponse.json({ events });
+  return NextResponse.json({ events, generatedSuggestions });
 }
 
-const recommendationRequestSchema = z.object({
-  timeMinutes: z.number().int().positive().max(24 * 60 * 30).optional(),
-  timeInput: z.string().optional(),
-  energy: z.enum(["low", "med", "high"]),
-  uniqueness: z.enum(["familiar", "related", "novel"]),
-  ideaHint: z
-    .string()
-    .max(500)
-    .optional()
-    .transform((s) => (s != null && s.trim() === "" ? undefined : s?.trim())),
-}).refine(
-  (data) => {
-    if (data.timeInput != null && data.timeInput.trim() !== "") {
-      const parsed = parseTimeInput(data.timeInput);
-      return parsed != null;
-    }
-    return data.timeMinutes != null;
-  },
-  { message: "Provide timeMinutes or valid timeInput (e.g. 45m, 2h, 1d)" },
-);
+const guestContextSchema = z.object({
+  interestsSummary: z.array(z.string().max(100)).max(20).default([]),
+  taskThemes: z.array(z.string().max(150)).max(10).default([]),
+  referenceTexts: z.array(z.string().max(200)).max(120).default([]),
+  recentBehavior: z
+    .object({
+      accepted: z.number().int().min(0).max(1000),
+      skipped: z.number().int().min(0).max(1000),
+      genAccepted: z.number().int().min(0).max(1000),
+      genSkipped: z.number().int().min(0).max(1000),
+    })
+    .optional(),
+});
+
+const recommendationRequestSchema = z
+  .object({
+    timeMinutes: z.number().int().positive().max(24 * 60 * 30).optional(),
+    timeInput: z.string().optional(),
+    energy: z.enum(["low", "med", "high"]),
+    uniqueness: z.enum(["familiar", "related", "novel"]),
+    ideaHint: z
+      .string()
+      .max(500)
+      .optional()
+      .transform((s) => (s != null && s.trim() === "" ? undefined : s?.trim())),
+    // Present only for unauthenticated (guest) requests — see docs/Guest-First-Architecture.md.
+    // The server never trusts a client-provided user id; guest requests simply have none.
+    guest: guestContextSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.timeInput != null && data.timeInput.trim() !== "") {
+        const parsed = parseTimeInput(data.timeInput);
+        return parsed != null;
+      }
+      return data.timeMinutes != null;
+    },
+    { message: "Provide timeMinutes or valid timeInput (e.g. 45m, 2h, 1d)" },
+  );
 
 function resolveTimeMinutes(body: z.infer<typeof recommendationRequestSchema>): number | null {
   if (body.timeInput != null && body.timeInput.trim() !== "") {
@@ -69,12 +106,7 @@ function resolveTimeMinutes(body: z.infer<typeof recommendationRequestSchema>): 
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-
-  const userId = (session as any)?.user?.id as string | undefined;
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = session?.user?.id;
 
   const json = await request.json();
   const parsed = recommendationRequestSchema.safeParse(json);
@@ -101,13 +133,22 @@ export async function POST(request: Request) {
     ideaHint: parsed.data.ideaHint ?? undefined,
   };
 
+  if (userId) {
+    return handleAuthenticatedRequest(userId, context);
+  }
+  return handleGuestRequest(context, parsed.data.guest);
+}
+
+async function handleAuthenticatedRequest(
+  userId: string,
+  context: { timeMinutes: number; energy: "low" | "med" | "high"; uniqueness: "familiar" | "related" | "novel"; ideaHint?: string },
+) {
   const allowed = await canUseGeneratedSuggestion(userId);
   if (!allowed) {
     return NextResponse.json(
       {
         dailyLimitReached: true,
-        message:
-          "You've reached your 5 AI suggestions for today. Try again tomorrow.",
+        message: "You've reached your 5 AI suggestions for today. Try again tomorrow.",
       },
       { status: 200 },
     );
@@ -167,91 +208,22 @@ export async function POST(request: Request) {
   const taskThemes = allTasksForInterests.map(
     (t) => (t.goal ? `${t.title} (${t.goal.title})` : t.title),
   );
-  const taskThemesText =
-    taskThemes.length > 0
-      ? ` Recent task themes: ${taskThemes.slice(0, 10).join("; ")}.`
-      : "";
+  const userInterestsSummary = buildInterestsSummary(interestLabels, taskThemes);
 
-  const userInterestsSummary =
-    interestLabels.length > 0
-      ? `interests: [${interestLabels.slice(0, 20).join(", ")}].${taskThemesText}`
-      : `Interests: not set. Use safe default themes: small project progress, quick life admin, learning. Suggest a broad, low-risk next action. If relevant, you may mention that adding interests in the app will improve suggestions.${taskThemesText}`;
-
-  let outcome = await getGeneratedSuggestion(
-    {
-      timeMinutes: context.timeMinutes,
-      energy: context.energy,
-      uniqueness: context.uniqueness,
-      ideaHint: context.ideaHint,
-    },
+  const uniquenessThreshold = getUniquenessThreshold(context.uniqueness);
+  const outcome = await getGeneratedSuggestionWithUniquenessGuard(
+    context,
     userInterestsSummary,
     recentBehaviorSummary,
+    referenceTexts,
+    uniquenessThreshold,
   );
 
   if (!outcome.success) {
-    return NextResponse.json(
-      {
-        fallback: outcome.fallback,
-      },
-      { status: 200 },
-    );
+    return NextResponse.json({ fallback: outcome.fallback }, { status: 200 });
   }
 
-  const uniquenessThreshold = getUniquenessThreshold(context.uniqueness);
-  let data = outcome.data;
-  if (
-    isTooSimilar(
-      data.generatedTask.title,
-      data.generatedTask.nextAction,
-      referenceTexts,
-      uniquenessThreshold,
-    )
-  ) {
-    const retryOutcome = await getGeneratedSuggestion(
-      {
-        timeMinutes: context.timeMinutes,
-        energy: context.energy,
-        uniqueness: context.uniqueness,
-        ideaHint: context.ideaHint,
-      },
-      userInterestsSummary,
-      recentBehaviorSummary,
-      referenceTexts,
-    );
-    if (!retryOutcome.success) {
-      return NextResponse.json(
-        {
-          fallback: {
-            message:
-              "I couldn't find a truly new idea right now. Try adjusting your interests or time window.",
-            deterministicIdea: "",
-          },
-        },
-        { status: 200 },
-      );
-    }
-    data = retryOutcome.data;
-    if (
-      isTooSimilar(
-        data.generatedTask.title,
-        data.generatedTask.nextAction,
-        referenceTexts,
-        uniquenessThreshold,
-      )
-    ) {
-      return NextResponse.json(
-        {
-          fallback: {
-            message:
-              "I couldn't find a truly new idea right now. Try adjusting your interests or time window.",
-            deterministicIdea: "",
-          },
-        },
-        { status: 200 },
-      );
-    }
-  }
-
+  const data = outcome.data;
   const shortlistHash =
     data.meta?.shortlistHash ?? `${userId}-${new Date().toISOString().slice(0, 10)}`;
 
@@ -289,4 +261,64 @@ export async function POST(request: Request) {
     model: data.model,
     meta: data.meta,
   });
+}
+
+/**
+ * Guest path: no session, no userId, no DB persistence. The client sends
+ * compact interest/task/history summaries it already computed locally (never
+ * full task lists) and its own browser-local daily quota already gated this
+ * call before it was made. We build the same prompt shape as the
+ * authenticated flow from that client-supplied context instead of DB rows.
+ */
+async function handleGuestRequest(
+  context: { timeMinutes: number; energy: "low" | "med" | "high"; uniqueness: "familiar" | "related" | "novel"; ideaHint?: string },
+  guest: z.infer<typeof guestContextSchema> | undefined,
+) {
+  const interestsSummary = guest?.interestsSummary ?? [];
+  const taskThemes = guest?.taskThemes ?? [];
+  const referenceTexts = guest?.referenceTexts ?? [];
+  const rb = guest?.recentBehavior;
+
+  const userInterestsSummary = buildInterestsSummary(interestsSummary, taskThemes);
+  const recentBehaviorSummary = rb
+    ? `Last 10 (existing recs): ${rb.accepted} accepted, ${rb.skipped} skipped. Last 10 (generated): ${rb.genAccepted} accepted, ${rb.genSkipped} skipped. No task titles.`
+    : "No recent behavior data yet.";
+
+  const uniquenessThreshold = getUniquenessThreshold(context.uniqueness);
+  const outcome = await getGeneratedSuggestionWithUniquenessGuard(
+    context,
+    userInterestsSummary,
+    recentBehaviorSummary,
+    referenceTexts,
+    uniquenessThreshold,
+  );
+
+  if (!outcome.success) {
+    return NextResponse.json({ fallback: outcome.fallback }, { status: 200 });
+  }
+
+  const data = outcome.data;
+  return NextResponse.json({
+    type: "generated",
+    // No recommendationId: guests store the suggestion (and assign their own
+    // local id) client-side in localStorage — see guest-adapter.ts.
+    generatedTask: {
+      title: data.generatedTask.title,
+      nextAction: data.generatedTask.nextAction,
+      estimatedMinutes: data.generatedTask.estimatedMinutes,
+      tags: data.generatedTask.tags,
+      reasoning: data.generatedTask.reasoning,
+      confidence: data.generatedTask.confidence,
+    },
+    model: data.model,
+    meta: data.meta,
+  });
+}
+
+function buildInterestsSummary(interestLabels: string[], taskThemes: string[]): string {
+  const taskThemesText =
+    taskThemes.length > 0 ? ` Recent task themes: ${taskThemes.slice(0, 10).join("; ")}.` : "";
+  return interestLabels.length > 0
+    ? `interests: [${interestLabels.slice(0, 20).join(", ")}].${taskThemesText}`
+    : `Interests: not set. Use safe default themes: small project progress, quick life admin, learning. Suggest a broad, low-risk next action. If relevant, you may mention that adding interests in the app will improve suggestions.${taskThemesText}`;
 }

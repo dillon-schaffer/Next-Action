@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDataAdapter } from "@/lib/data/data-context";
 
 const DEFAULT_INTERESTS = [
   "building side projects",
@@ -51,6 +52,7 @@ export function OnboardingInterestsForm({
   initialInterests?: string[];
 }) {
   const router = useRouter();
+  const { adapter } = useDataAdapter();
   const [yourInterests, setYourInterests] = useState<string[]>(() =>
     dedupeByKey(initialInterests.map((l) => l.trim()).filter(Boolean)),
   );
@@ -69,21 +71,13 @@ export function OnboardingInterestsForm({
     setIsPersisting(true);
     setError(null);
     try {
-      const res = await fetch("/api/user/interests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interests: payload }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save");
-      }
+      await adapter.setInterests(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsPersisting(false);
     }
-  }, []);
+  }, [adapter]);
 
   const addFromSuggested = useCallback(
     (label: string) => {
@@ -124,17 +118,9 @@ export function OnboardingInterestsForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/user/interests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interests: dedupeByKey(yourInterests) }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save");
-      }
+      await adapter.setInterests(dedupeByKey(yourInterests));
+      await adapter.markOnboardingComplete();
       router.push("/dashboard");
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -146,14 +132,8 @@ export function OnboardingInterestsForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/user/interests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interests: [] }),
-      });
-      if (!res.ok) throw new Error("Failed to continue");
+      await adapter.markOnboardingComplete();
       router.push("/dashboard");
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -162,8 +142,8 @@ export function OnboardingInterestsForm({
   };
 
   return (
-    <Card className="border-0 bg-transparent shadow-none">
-      <CardContent className="p-0 space-y-6">
+    <Card>
+      <CardContent className="space-y-6">
         {/* Your Interests */}
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">
@@ -178,14 +158,14 @@ export function OnboardingInterestsForm({
               yourInterests.map((label) => (
                 <span
                   key={normalizeKey(label)}
-                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-lg)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  className="animate-card-in inline-flex items-center gap-1.5 rounded-[var(--radius-lg)] border border-foreground/20 bg-frosted-mint px-4 py-2 text-sm font-medium text-foreground"
                 >
                   {label}
                   <button
                     type="button"
                     onClick={() => removeFromYours(label)}
                     disabled={isPersisting}
-                    className="ml-0.5 rounded-[var(--radius-lg)] p-0.5 hover:bg-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-primary-foreground/40 cursor-pointer disabled:opacity-50"
+                    className="ml-0.5 rounded-[var(--radius-lg)] p-0.5 hover:bg-foreground/10 focus:outline-none focus:ring-2 focus:ring-foreground/30 cursor-pointer disabled:opacity-50"
                     aria-label={`Remove ${label}`}
                   >
                     <span className="sr-only">Remove</span>
@@ -235,7 +215,7 @@ export function OnboardingInterestsForm({
                   type="button"
                   onClick={() => addFromSuggested(label)}
                   disabled={isPersisting}
-                  className="rounded-[var(--radius-lg)] px-4 py-2 text-sm font-medium transition-colors cursor-pointer bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50"
+                  className="rounded-[var(--radius-lg)] border border-foreground/15 px-4 py-2 text-sm font-medium transition-[background-color,transform] duration-150 [transition-timing-function:var(--ease-out)] cursor-pointer bg-muted text-muted-foreground hover:bg-accent hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {label}
                 </button>

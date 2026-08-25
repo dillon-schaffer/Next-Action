@@ -1259,6 +1259,7 @@ export const GoalScalarFieldEnum = {
   title: 'title',
   description: 'description',
   isActive: 'isActive',
+  localId: 'localId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1279,6 +1280,7 @@ export const TaskScalarFieldEnum = {
   estimatedInput: 'estimatedInput',
   deadlineAt: 'deadlineAt',
   lastTouchedAt: 'lastTouchedAt',
+  localId: 'localId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1332,7 +1334,8 @@ export const GeneratedSuggestionScalarFieldEnum = {
   shortlistHash: 'shortlistHash',
   decision: 'decision',
   createdTaskId: 'createdTaskId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  localId: 'localId'
 } as const
 
 export type GeneratedSuggestionScalarFieldEnum = (typeof GeneratedSuggestionScalarFieldEnum)[keyof typeof GeneratedSuggestionScalarFieldEnum]

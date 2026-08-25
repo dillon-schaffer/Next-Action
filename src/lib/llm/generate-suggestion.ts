@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
+import { isTooSimilar } from "@/lib/similarity";
+
 const MAX_OUTPUT_TOKENS = 350;
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-5";
 
 const GENERATED_OUTPUT_SCHEMA = z.object({
   type: z.literal("generated"),
@@ -171,4 +173,46 @@ export async function getGeneratedSuggestion(
       },
     };
   }
+}
+
+/**
+ * Gets a generated suggestion and enforces the uniqueness guard: if the first
+ * result is too similar to `referenceTexts`, retries once with those texts
+ * fed back into the prompt. Shared by the authenticated and guest branches of
+ * POST /api/recommendations so the retry/fallback logic only lives once.
+ */
+export async function getGeneratedSuggestionWithUniquenessGuard(
+  context: {
+    timeMinutes: number;
+    energy: string;
+    uniqueness: "familiar" | "related" | "novel";
+    ideaHint?: string;
+  },
+  userInterestsSummary: string,
+  recentBehaviorSummary: string,
+  referenceTexts: string[],
+  uniquenessThreshold: number,
+): Promise<GenerateSuggestionOutcome> {
+  const first = await getGeneratedSuggestion(context, userInterestsSummary, recentBehaviorSummary);
+  if (!first.success) return first;
+
+  if (!isTooSimilar(first.data.generatedTask.title, first.data.generatedTask.nextAction, referenceTexts, uniquenessThreshold)) {
+    return first;
+  }
+
+  const retry = await getGeneratedSuggestion(context, userInterestsSummary, recentBehaviorSummary, referenceTexts);
+  const stillTooSimilarFallback: GenerateSuggestionOutcome = {
+    success: false,
+    fallback: {
+      message: "I couldn't find a truly new idea right now. Try adjusting your interests or time window.",
+      deterministicIdea: "",
+    },
+  };
+  if (!retry.success) return stillTooSimilarFallback;
+
+  if (isTooSimilar(retry.data.generatedTask.title, retry.data.generatedTask.nextAction, referenceTexts, uniquenessThreshold)) {
+    return stillTooSimilarFallback;
+  }
+
+  return retry;
 }
